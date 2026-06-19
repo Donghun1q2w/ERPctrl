@@ -67,7 +67,7 @@ W/O 12345로 spool 진행 엑셀 일괄 다운로드
 2. **동기화**: 이후 `erpctrl update`로 `scenarios/`·`controls/`를 서버 기준 최신화.
 3. **매칭**: 각 시나리오 JSON의 한글 `description`을 자연어 요청과 의미 비교.
 4. **변수**: 환경변수 우선, `PWD`는 미설정 시 실행 시점 입력(저장·로그 노출 없음).
-5. **실행**: `erpctrl run --scenario <경로> --vars K=V ...`.
+5. **실행**: `erpctrl run --scenario <경로> --vars "K1=V1,K2=V2"` (`--vars`는 **콤마 구분 단일 인자**. 값에 콤마가 있는 변수는 환경변수로 주입).
 
 ## 주의
 

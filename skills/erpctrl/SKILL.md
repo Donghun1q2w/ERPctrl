@@ -141,20 +141,35 @@ Get-ChildItem -Path $dirs -Filter *.json -File -Recurse -ErrorAction SilentlyCon
 
 `--vars`로 변수를 주입해 시나리오를 실행한다. (PowerShell 자동변수 `$PWD`(현재 디렉터리)와 충돌하지 않도록 비밀번호는 `$ErpPwd` 등 다른 이름을 쓴다.)
 
+> 🔑 **`--vars`는 콤마(`,`)로 구분된 "단일 인자"** 다 (`--vars "K1=V1,K2=V2"`).
+> PowerShell 배열을 `--vars @vars`처럼 splat하면 **첫 변수만** 파싱되고 나머지는 무시되어
+> `${WO_NO}` 같은 리터럴이 남는다. 반드시 `($pairs -join ',')`로 **하나의 문자열**로 합쳐 넘긴다.
+>
+> ⚠️ **값에 콤마가 포함된 변수**(예: `MEAL_DATES=2026-05-21,2026-05-22`)는 `--vars`로 넘길 수 없다
+> (콤마가 구분자로 오인됨). 이런 변수는 `$env:`로 주입한다 — CLI가 환경변수도 자동 주입한다.
+
 ```powershell
 $dst = Join-Path $env:APPDATA 'erpctrl'
 $exe = Join-Path $dst 'erpctrl.exe'
 $scenario = Join-Path $dst 'scenarios\matlcode_search_by_category.json'   # 매칭 결과로 치환
 
-# 예시: 변수 조립 (필요한 키만)
-$vars = @(
+# 콤마 포함 값은 --vars 대신 환경변수로 주입 (예시; 해당 시나리오에서만)
+# $env:MEAL_DATES = "2026-05-21,2026-05-22"
+
+# 콤마 없는 변수는 KEY=VAL 쌍으로 모아 콤마-join 단일 인자로 전달 (필요한 키만)
+$pairs = @(
     "USER_ID=$env:USER_ID",
     "PWD=$ErpPwd",                       # 실행 시점 입력받은 비밀번호
     "SHERP_EXE_PATH=$env:SHERP_EXE_PATH",
     "SAVE_DIR=D:\ERP_DL"
 )
+# 안전장치: 값에 콤마가 있으면 환경변수로 돌리고 --vars 목록에서 제외
+$varList = @(); foreach ($p in $pairs) {
+    $k,$v = $p -split '=',2
+    if ($v -like '*,*') { Set-Item "Env:$k" $v } else { $varList += $p }
+}
 
-& $exe run --scenario $scenario --vars @vars
+& $exe run --scenario $scenario --vars ($varList -join ',')
 "exit code: $LASTEXITCODE"
 ```
 

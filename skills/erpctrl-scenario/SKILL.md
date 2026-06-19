@@ -133,7 +133,12 @@ $env:ERPCTRL_BLOCKS_DIR = Join-Path $env:APPDATA 'erpctrl\scenarios\blocks'
 ```powershell
 $dst = Join-Path $env:APPDATA 'erpctrl'
 $env:ERPCTRL_BLOCKS_DIR = Join-Path $dst 'scenarios\blocks'
-& "$dst\erpctrl.exe" run --scenario "$dst\my_scenarios\<id>.json" --vars "USER_ID=$env:USER_ID" "PWD=$ErpPwd" ...
+
+# 🔑 --vars 는 콤마 구분 "단일 인자". 쌍을 모아 ($pairs -join ',') 로 넘긴다.
+#    공백 토큰(--vars A B)으로 넘기면 첫 변수만 파싱되어 ${WO_NO} 리터럴이 남는다.
+#    값에 콤마가 있는 변수(MEAL_DATES 등)는 $env: 로 주입한다.
+$pairs = @("USER_ID=$env:USER_ID", "PWD=$ErpPwd")   # 시나리오에 맞춰 추가
+& "$dst\erpctrl.exe" run --scenario "$dst\my_scenarios\<id>.json" --vars ($pairs -join ',')
 "exit code: $LASTEXITCODE"
 ```
 
