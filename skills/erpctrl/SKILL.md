@@ -127,9 +127,6 @@ Get-ChildItem -Path $dirs -Filter *.json -File -Recurse -ErrorAction SilentlyCon
 | `PWD` | SHIIS 비밀번호 | `$env:PWD` → **실행 시점 입력**(저장 금지) |
 | `SHERP_EXE_PATH` | launcher exe 경로 | `$env:SHERP_EXE_PATH` → 사용자 입력 |
 | `SHERP_MAIN_EXE_PATH` | main exe 경로 | `$env:SHERP_MAIN_EXE_PATH` → 사용자 입력 |
-| `WO_NO` | 작업지시 번호 (spool 계열) | 사용자 입력 |
-| `SAVE_DIR` | 엑셀 저장 폴더 | 사용자 입력(기본 제안 가능) |
-| `SITE_NAME`/`DEPT_NAME`/`MEAL_DATES`/`DEPT_COUNT`/`BREAKFAST`/`LUNCH`/`DINNER` | 식수관리 | 사용자 입력 |
 
 > SHERP 경로는 영구 환경변수 등록을 권장:
 > ```powershell
