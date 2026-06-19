@@ -134,11 +134,11 @@ $env:ERPCTRL_BLOCKS_DIR = Join-Path $env:APPDATA 'erpctrl\scenarios\blocks'
 $dst = Join-Path $env:APPDATA 'erpctrl'
 $env:ERPCTRL_BLOCKS_DIR = Join-Path $dst 'scenarios\blocks'
 
-# 🔑 --vars 는 콤마 구분 "단일 인자". 쌍을 모아 ($pairs -join ',') 로 넘긴다.
-#    공백 토큰(--vars A B)으로 넘기면 첫 변수만 파싱되어 ${WO_NO} 리터럴이 남는다.
-#    값에 콤마가 있는 변수(MEAL_DATES 등)는 $env: 로 주입한다.
-$pairs = @("USER_ID=$env:USER_ID", "PWD=$ErpPwd")   # 시나리오에 맞춰 추가
-& "$dst\erpctrl.exe" run --scenario "$dst\my_scenarios\<id>.json" --vars ($pairs -join ',')
+# ★ --vars 는 "하나의 콤마-구분 문자열" (절대 배열 splat/공백 토큰 금지 → 첫 변수만 파싱됨).
+#    값에 콤마가 있는 변수(MEAL_DATES 등)는 $env: 로 주입한다 (CLI가 환경변수도 자동 주입).
+$ErpPwd  = $env:PWD
+$varsArg = "USER_ID=$env:USER_ID,PWD=$ErpPwd,SHERP_EXE_PATH=$env:SHERP_EXE_PATH"   # 시나리오에 맞춰 WO_NO/SAVE_DIR 등 추가
+& "$dst\erpctrl.exe" run --scenario "$dst\my_scenarios\<id>.json" --vars $varsArg
 "exit code: $LASTEXITCODE"
 ```
 

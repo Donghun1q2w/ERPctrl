@@ -148,30 +148,27 @@ Get-ChildItem -Path $dirs -Filter *.json -File -Recurse -ErrorAction SilentlyCon
 > ⚠️ **값에 콤마가 포함된 변수**(예: `MEAL_DATES=2026-05-21,2026-05-22`)는 `--vars`로 넘길 수 없다
 > (콤마가 구분자로 오인됨). 이런 변수는 `$env:`로 주입한다 — CLI가 환경변수도 자동 주입한다.
 
+검증된 실행 패턴(`tools/run_spool_progress.ps1` line 393과 동일):
+
 ```powershell
 $dst = Join-Path $env:APPDATA 'erpctrl'
 $exe = Join-Path $dst 'erpctrl.exe'
 $scenario = Join-Path $dst 'scenarios\matlcode_search_by_category.json'   # 매칭 결과로 치환
 
-# 콤마 포함 값은 --vars 대신 환경변수로 주입 (예시; 해당 시나리오에서만)
-# $env:MEAL_DATES = "2026-05-21,2026-05-22"
+# 변수값 준비 (환경변수 우선, PWD 미설정 시 입력)
+$ErpPwd  = $env:PWD                       # 없으면 실행 시점에 입력받아 대입
+$WoNo    = "P250129-01"                   # 시나리오에 WO_NO 필요 시
+$SaveDir = "D:\tmp"                       # 시나리오에 SAVE_DIR 필요 시
 
-# 콤마 없는 변수는 KEY=VAL 쌍으로 모아 콤마-join 단일 인자로 전달 (필요한 키만)
-$pairs = @(
-    "USER_ID=$env:USER_ID",
-    "PWD=$ErpPwd",                       # 실행 시점 입력받은 비밀번호
-    "SHERP_EXE_PATH=$env:SHERP_EXE_PATH",
-    "SAVE_DIR=D:\ERP_DL"
-)
-# 안전장치: 값에 콤마가 있으면 환경변수로 돌리고 --vars 목록에서 제외
-$varList = @(); foreach ($p in $pairs) {
-    $k,$v = $p -split '=',2
-    if ($v -like '*,*') { Set-Item "Env:$k" $v } else { $varList += $p }
-}
+# ★ --vars 는 "하나의 콤마-구분 문자열". 시나리오가 요구하는 키만 포함한다.
+$varsArg = "USER_ID=$env:USER_ID,PWD=$ErpPwd,SHERP_EXE_PATH=$env:SHERP_EXE_PATH,WO_NO=$WoNo,SAVE_DIR=$SaveDir"
 
-& $exe run --scenario $scenario --vars ($varList -join ',')
+& $exe run --scenario $scenario --vars $varsArg
 "exit code: $LASTEXITCODE"
 ```
+
+- **절대 `--vars @arr`(배열 splat)나 `--vars A B`(공백 토큰)로 넘기지 말 것** — 첫 변수만 파싱되어 `${WO_NO}` 리터럴이 남는다.
+- 값에 콤마가 있는 변수(예: `MEAL_DATES=2026-05-21,2026-05-22`)는 `--vars`에 넣지 말고 `$env:MEAL_DATES = "..."`로 주입(CLI가 환경변수도 자동 주입).
 
 - 사용자 시나리오 실행 시 블록 include가 깨지지 않도록 환경변수 설정:
   ```powershell
