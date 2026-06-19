@@ -11,6 +11,9 @@ argument-hint: "<자동화하려는 SHIIS3 작업 설명> -- 새 시나리오 JS
 
 > 기존 시나리오를 실행만 하려면 `erpctrl` 스킬을 사용한다.
 
+> ⚠️ **필수**: 시나리오를 작성하기 전에 반드시 `erpctrl`의 `README.md`(`%APPDATA%\erpctrl\README.md`)를
+> 먼저 읽고 숙지한다 — 특히 액션 레퍼런스·블록 카탈로그·시나리오 작성 가이드·트러블슈팅. (아래 Step 1.5)
+
 ## 절차
 
 ### Step 1 — CLI 준비
@@ -30,6 +33,23 @@ if (-not (Test-Path $exe)) {
 & $exe update 2>$null
 New-Item -ItemType Directory -Force (Join-Path $dst 'my_scenarios') | Out-Null
 ```
+
+### Step 1.5 — README 숙지 (필수)
+
+시나리오 작성 전에 반드시 `erpctrl`의 `README.md`를 **Read 도구로 읽고 숙지**한다.
+액션 레퍼런스·블록 카탈로그·시나리오 작성 가이드·트러블슈팅을 근거로 작성한다.
+
+- 1순위: `%APPDATA%\erpctrl\README.md`
+- 폴백: `Z:\그룹 공유\R&D\연구개발부\Common\011. 편리한 프로그램\ErpCtrl\README.md`
+- 둘 다 없으면 사용자에게 보고하고 중단.
+
+```powershell
+$readme = Join-Path $env:APPDATA 'erpctrl\README.md'
+if (-not (Test-Path $readme)) { $readme = 'Z:\그룹 공유\R&D\연구개발부\Common\011. 편리한 프로그램\ErpCtrl\README.md' }
+if (Test-Path $readme) { Write-Host "README 경로: $readme" } else { Write-Error "README.md 없음 — 부트스트랩 확인 필요" }
+```
+
+→ 출력된 경로를 Read로 읽어 숙지한 뒤 Step 2로 진행한다. SKILL.md 요약과 README가 다르면 **README를 우선**한다.
 
 ### Step 2 — 워크플로우 인터뷰
 
