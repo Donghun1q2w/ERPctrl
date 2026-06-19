@@ -1,0 +1,21 @@
+{
+  "name": "erpctrl",
+  "owner": {
+    "name": "donghun.lee"
+  },
+  "plugins": [
+    {
+      "name": "erpctrl",
+      "source": "./",
+      "description": "SHIIS3 ERP UI 자동화 CLI를 자연어로 구동 + 시나리오 생성",
+      "category": "productivity",
+      "homepage": "https://github.com/Donghun1q2w/ERPctrl",
+      "tags": [
+        "erpctrl",
+        "SHIIS3",
+        "ERP",
+        "automation"
+      ]
+    }
+  ]
+}

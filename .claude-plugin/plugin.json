@@ -1,0 +1,18 @@
+{
+  "name": "erpctrl",
+  "version": "0.1.0",
+  "description": "SHIIS3 ERP UI 자동화 CLI(erpctrl.exe)를 자연어로 구동하는 Claude Code 플러그인. CLI 바이너리는 번들하지 않고 실행 시 공유서버에서 %APPDATA%\\erpctrl\\로 부트스트랩한다.",
+  "author": {
+    "name": "donghun.lee",
+    "email": "ldh1915@gmail.com"
+  },
+  "homepage": "https://github.com/Donghun1q2w/ERPctrl",
+  "keywords": [
+    "erpctrl",
+    "SHIIS3",
+    "ERP",
+    "automation",
+    "UI-automation",
+    "scenario"
+  ]
+}

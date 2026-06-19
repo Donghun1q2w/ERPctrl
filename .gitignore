@@ -1,0 +1,12 @@
+# ERPCTRL CLI 바이너리는 플러그인에 포함하지 않는다 (실행 시 공유서버에서 부트스트랩)
+*.exe
+*.dll
+*.pdb
+*.runtimeconfig.json
+
+# 로컬/임시
+.omc/
+logs/
+*.log
+.DS_Store
+Thumbs.db
