@@ -7,7 +7,7 @@
     {
       "name": "erpctrl",
       "source": "./",
-      "description": "SHIIS3 ERP UI 자동화 CLI를 자연어로 구동 + 시나리오 생성",
+      "description": "SHIIS3 ERP UI 자동화 CLI를 자연어로 구동 + 시나리오 생성. Claude Code와 Codex 공용 skills를 포함한다.",
       "category": "productivity",
       "homepage": "https://github.com/Donghun1q2w/ERPctrl",
       "tags": [

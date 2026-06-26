@@ -1,0 +1,42 @@
+{
+  "name": "erpctrl",
+  "version": "0.2.0",
+  "description": "SHIIS3 ERP UI 자동화 CLI(erpctrl.exe)를 자연어로 구동하고 시나리오를 생성하는 Codex 플러그인. CLI 바이너리는 번들하지 않고 실행 시 공유서버에서 %APPDATA%\\erpctrl\\로 부트스트랩한다.",
+  "author": {
+    "name": "donghun.lee",
+    "email": "ldh1915@gmail.com",
+    "url": "https://github.com/Donghun1q2w"
+  },
+  "homepage": "https://github.com/Donghun1q2w/ERPctrl",
+  "repository": "https://github.com/Donghun1q2w/ERPctrl",
+  "license": "Proprietary",
+  "keywords": [
+    "erpctrl",
+    "SHIIS3",
+    "ERP",
+    "automation",
+    "UI-automation",
+    "scenario"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "ERPCTRL",
+    "shortDescription": "SHIIS3 ERP 자동화를 자연어로 실행",
+    "longDescription": "ERPCTRL lets Codex prepare the erpctrl.exe CLI from the internal shared server, match Korean natural-language requests to scenario JSON files, run SHIIS3 ERP UI automation, and help create reusable scenarios.",
+    "developerName": "donghun.lee",
+    "category": "Productivity",
+    "capabilities": [
+      "Read",
+      "Write",
+      "Automation"
+    ],
+    "websiteURL": "https://github.com/Donghun1q2w/ERPctrl",
+    "defaultPrompt": [
+      "자재코드를 대분류별로 엑셀로 받아줘",
+      "W/O 번호로 spool 진행 엑셀을 다운로드해줘",
+      "SHIIS3 자동화 시나리오를 새로 만들어줘"
+    ],
+    "brandColor": "#2563EB",
+    "screenshots": []
+  }
+}
