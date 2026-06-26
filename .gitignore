@@ -6,6 +6,8 @@
 
 # 로컬/임시
 .omc/
+.omx/
+docs/
 logs/
 *.log
 .DS_Store

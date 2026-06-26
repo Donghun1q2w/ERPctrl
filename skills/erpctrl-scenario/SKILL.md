@@ -59,6 +59,34 @@ if (Test-Path $readme) { Write-Host "README 경로: $readme" } else { Write-Erro
 - 반복 여부(여러 일자, 콤보 항목 전체 등)
 - 필요한 변수(USER_ID/PWD/경로/WO_NO 등)
 
+### Step 2.5 — ERP 메뉴 트리 탐색 및 검증 (필수)
+
+메뉴에서 기능을 열고 윈도우 scope를 전환하는 시나리오를 작성할 때는 반드시
+`ref\erp_menu_tree.json`을 먼저 읽어 메뉴 경로와 모듈을 탐색/검증한다.
+
+- 개발 저장소 기준 경로: `D:\001_Work\2026\040_ERP_Ctrl\erpctrl_plugin\skills\erpctrl-scenario\ref\erp_menu_tree.json`
+- 설치본/플러그인 패키지 기준 경로: 이 `SKILL.md`가 있는 스킬 폴더의 `ref\erp_menu_tree.json`
+- `path`는 `openMenu`/`blocks/module_open.json`의 `MENU_PATH`에 넣을 정확한 문자열이다. 사용자가 말한 메뉴명을 임의로 보정하지 말고, leaf 항목의 `path`를 그대로 사용한다.
+- `name`은 실제 메뉴 UIA 텍스트이며, `module`은 `C:\SHIIS3\<module>.exe` 분석 대상 EXE명이다. Step 3의 `analyze --exe` 대상은 선택한 leaf 메뉴의 `module`과 일치해야 한다.
+- `active:false` 메뉴는 비활성/미사용 가능성이 있으므로 사용자 확인 없이 시나리오 대상으로 확정하지 않는다.
+- `WINDOW_TITLE`은 메뉴 트리만으로 단정하지 않는다. `MENU_PATH`로 기능을 연 뒤 실제 윈도우 제목을 `waitWindow`/`discover`/윈도우 목록/실행 로그로 확인해 `WINDOW_TITLE`에 반영한다.
+- 후보가 둘 이상이거나 `path`/`module`을 확정할 수 없으면, 후보 `path`, `module`, `active` 값을 제시하고 사용자 확인을 받는다.
+
+메뉴 트리 검색 예:
+
+```powershell
+$menuTree = Get-Content 'D:\001_Work\2026\040_ERP_Ctrl\erpctrl_plugin\skills\erpctrl-scenario\ref\erp_menu_tree.json' -Raw -Encoding UTF8 | ConvertFrom-Json
+function Find-ErpMenu($nodes, [string]$pattern) {
+    foreach ($n in $nodes) {
+        if (($n.path -like "*$pattern*") -or ($n.name -like "*$pattern*") -or ($n.module -like "*$pattern*")) {
+            [pscustomobject]@{ path = $n.path; name = $n.name; module = $n.module; active = $n.active }
+        }
+        if ($n.children) { Find-ErpMenu $n.children $pattern }
+    }
+}
+Find-ErpMenu $menuTree.tree '자재코드'
+```
+
 ### Step 3 — 컨트롤 이름 확보
 
 **정적 분석** (대상 모듈 exe의 폼/컨트롤/이벤트 메타데이터):
@@ -66,6 +94,9 @@ if (Test-Path $readme) { Write-Host "README 경로: $readme" } else { Write-Erro
 ```powershell
 & "$env:APPDATA\erpctrl\erpctrl.exe" analyze --exe C:\SHIIS3\<대상모듈>.exe --out "$env:APPDATA\erpctrl\controls\"
 ```
+
+`<대상모듈>`은 Step 2.5에서 선택한 `erp_menu_tree.json` leaf 메뉴의 `module` 값과 일치해야 한다.
+예: `module`이 `coerp_mat_item`이면 `C:\SHIIS3\coerp_mat_item.exe`를 분석한다.
 
 **런타임 discover** (메뉴 등 동적 컨트롤 — SHIIS 실행 중일 때 별도 터미널):
 
@@ -81,11 +112,13 @@ if (Test-Path $readme) { Write-Host "README 경로: $readme" } else { Write-Erro
 ### Step 4 — 블록 우선 재사용
 
 반복 시퀀스는 `scenarios/blocks/*.json`을 `include`로 호출한다. **새로 짜기 전 항상 확인.**
+메뉴 진입이 필요한 경우 `blocks/module_open.json`을 우선 사용하되, `MENU_PATH`는 반드시 Step 2.5에서
+검증한 `erp_menu_tree.json`의 leaf `path`를 사용하고, `WINDOW_TITLE`은 실제 기능 오픈 후 확인한 제목을 넣는다.
 
 | 블록 | 용도 | 주요 vars |
 |---|---|---|
 | `blocks/login_sherp.json` | launcher → coEIS → Sign In → SHIIS main 진입 | `SHERP_EXE_PATH`, `USER_ID`, `PWD` |
-| `blocks/module_open.json` | 메뉴 진입 + 윈도우 scope 전환 | `MENU_PATH`, `WINDOW_TITLE`, `WAIT_AFTER_OPEN_MS` |
+| `blocks/module_open.json` | 메뉴 진입 + 윈도우 scope 전환 (`MENU_PATH`는 `erp_menu_tree.json` leaf `path`와 정확히 일치) | `MENU_PATH`, `WINDOW_TITLE`, `WAIT_AFTER_OPEN_MS` |
 | `blocks/lookup_popup.json` | Site/Dept/W/O lookup popup 검색 + 첫 row 더블클릭 + 복귀 | `BTN_LOOKUP`, `POPUP_TITLE`, `SEARCH_FIELD`, `SEARCH_VALUE`, `SEARCH_BTN`, `RETURN_WINDOW` |
 | `blocks/file_dialog_save.json` | SaveFileDialog typeKeys + 저장(S) | `TRIGGER_BTN`, `FILE_PATH`, `SAVE_BTN` |
 | `blocks/file_dialog_upload.json` | OpenFileDialog typeKeys + ENTER | `TRIGGER_BTN`, `FILE_PATH` |
@@ -112,7 +145,11 @@ include 호출 예:
     { "step": 1, "action": "include", "value": "blocks/login_sherp.json",
       "vars": { "SHERP_EXE_PATH": "${SHERP_EXE_PATH}", "USER_ID": "${USER_ID}", "PWD": "${PWD}" } },
     { "step": 2, "action": "include", "value": "blocks/module_open.json",
-      "vars": { "MENU_PATH": "구매 > ...", "WINDOW_TITLE": "...", "WAIT_AFTER_OPEN_MS": "2500" } }
+      "vars": {
+        "MENU_PATH": "<erp_menu_tree.json의 leaf path 그대로>",
+        "WINDOW_TITLE": "<기능 오픈 후 확인한 실제 윈도우 제목>",
+        "WAIT_AFTER_OPEN_MS": "2500"
+      } }
     // ... 실제 작업 step
   ]
 }
@@ -143,6 +180,8 @@ $varsArg = "USER_ID=$env:USER_ID,PWD=$ErpPwd,SHERP_EXE_PATH=$env:SHERP_EXE_PATH"
 ```
 
 - exit 0이면 `result.json`·스크린샷 경로를 보고.
+- 메뉴 오픈/윈도우 전환이 실패하면 `erp_menu_tree.json`의 `path`, `module`, `active`를 다시 확인하고,
+  실제 오픈된 윈도우 제목을 `discover`/로그/윈도우 목록으로 재검증한 뒤 `MENU_PATH` 또는 `WINDOW_TITLE`을 수정한다.
 - exit 3(컨트롤 식별 실패)이면 run.log의 윈도우 dump에서 실제 컨트롤명을 확인해 step을 수정하고 재실행.
 - SHIIS3가 없는 환경이면 `smoke_notepad`/`smoke_include`로 엔진 동작만 확인.
 
