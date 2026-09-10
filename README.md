@@ -26,8 +26,16 @@ CLI 바이너리는 이 저장소에 포함되지 않는다. 스킬 실행 시 �
 ## 사전 조건
 
 - Windows + PowerShell
-- 공유서버 접근: `Z:\그룹 공유\R&D\연구개발부\Common\011. 편리한 프로그램\ErpCtrl\`
-  (네트워크 드라이브 `Z:` 매핑 / 사내망·VPN). **접근 불가 시 스킬은 중단된다.**
+- 공유서버 접근 (경로는 사용자마다 다르며, 존재하는 첫 경로를 쓴다)
+  1. 환경변수 `ERPCTRL_SHARE_DIR` — 설정돼 있으면 최우선
+  2. `Z:\공유받은 폴더\R&D(H0700)\연구개발부\Common\011. 편리한 프로그램\ErpCtrl\`
+  3. `Z:\그룹 공유\R&D\연구개발부\Common\011. 편리한 프로그램\ErpCtrl\`
+
+  네트워크 드라이브 `Z:` 매핑 / 사내망·VPN이 필요하다. **모두 접근 불가 시 스킬은 중단된다.**
+  경로가 위 후보에 없으면 한 번만 등록해 두면 된다.
+  ```powershell
+  [System.Environment]::SetEnvironmentVariable("ERPCTRL_SHARE_DIR","<실제 경로>","User")
+  ```
 - SHIIS3 설치 경로 환경변수(권장, 한 번만):
   ```powershell
   [System.Environment]::SetEnvironmentVariable("SHERP_EXE_PATH","C:\SHIIS3\shERP.exe","User")
