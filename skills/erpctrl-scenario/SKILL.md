@@ -22,11 +22,17 @@ argument-hint: "<자동화하려는 SHIIS3 작업 설명> -- 새 시나리오 JS
 
 ```powershell
 $ErrorActionPreference = 'Stop'
-$src = 'Z:\그룹 공유\R&D\연구개발부\Common\011. 편리한 프로그램\ErpCtrl'
+# 공유서버 경로는 사용자마다 다르다. 환경변수 우선, 없으면 후보를 차례로 확인한다.
+$srcCandidates = @(
+    $env:ERPCTRL_SHARE_DIR,
+    'Z:\공유받은 폴더\R&D(H0700)\연구개발부\Common\011. 편리한 프로그램\ErpCtrl',
+    'Z:\그룹 공유\R&D\연구개발부\Common\011. 편리한 프로그램\ErpCtrl'
+) | Where-Object { $_ }
+$src = $srcCandidates | Where-Object { Test-Path $_ } | Select-Object -First 1
 $dst = Join-Path $env:APPDATA 'erpctrl'
 $exe = Join-Path $dst 'erpctrl.exe'
 if (-not (Test-Path $exe)) {
-    if (-not (Test-Path $src)) { Write-Error "공유서버 접근 불가: $src (Z: 매핑/VPN 확인)"; exit 1 }
+    if (-not $src) { Write-Error "공유서버 접근 불가. 확인한 경로:`n$($srcCandidates -join "`n")`n(Z: 매핑/VPN 확인, 또는 ERPCTRL_SHARE_DIR 지정)"; exit 1 }
     $null = robocopy $src $dst /E /R:3 /W:5 /NFL /NDL /NJH /NJS /NC /NS
     if ($LASTEXITCODE -ge 8) { Write-Error "robocopy 실패 (exit $LASTEXITCODE)"; exit 1 }
 }
@@ -40,13 +46,20 @@ New-Item -ItemType Directory -Force (Join-Path $dst 'my_scenarios') | Out-Null
 액션 레퍼런스·블록 카탈로그·시나리오 작성 가이드·트러블슈팅을 근거로 작성한다.
 
 - 1순위: `%APPDATA%\erpctrl\README.md`
-- 폴백: `Z:\그룹 공유\R&D\연구개발부\Common\011. 편리한 프로그램\ErpCtrl\README.md`
-- 둘 다 없으면 사용자에게 보고하고 중단.
+- 폴백(공유서버, 사용자마다 경로가 다름 — 존재하는 첫 경로 사용):
+  - `$env:ERPCTRL_SHARE_DIR\README.md` (설정돼 있으면 최우선)
+  - `Z:\공유받은 폴더\R&D(H0700)\연구개발부\Common\011. 편리한 프로그램\ErpCtrl\README.md`
+  - `Z:\그룹 공유\R&D\연구개발부\Common\011. 편리한 프로그램\ErpCtrl\README.md`
+- 모두 없으면 사용자에게 보고하고 중단.
 
 ```powershell
 $readme = Join-Path $env:APPDATA 'erpctrl\README.md'
-if (-not (Test-Path $readme)) { $readme = 'Z:\그룹 공유\R&D\연구개발부\Common\011. 편리한 프로그램\ErpCtrl\README.md' }
-if (Test-Path $readme) { Write-Host "README 경로: $readme" } else { Write-Error "README.md 없음 — 부트스트랩 확인 필요" }
+if (-not (Test-Path $readme)) {
+    $readme = @($env:ERPCTRL_SHARE_DIR, 'Z:\공유받은 폴더\R&D(H0700)\연구개발부\Common\011. 편리한 프로그램\ErpCtrl', 'Z:\그룹 공유\R&D\연구개발부\Common\011. 편리한 프로그램\ErpCtrl') |
+        Where-Object { $_ } | ForEach-Object { Join-Path $_ 'README.md' } |
+        Where-Object { Test-Path $_ } | Select-Object -First 1
+}
+if ($readme -and (Test-Path $readme)) { Write-Host "README 경로: $readme" } else { Write-Error "README.md 없음 — 부트스트랩 확인 필요" }
 ```
 
 → 출력된 경로를 Read로 읽어 숙지한 뒤 Step 2로 진행한다. SKILL.md 요약과 README가 다르면 **README를 우선**한다.

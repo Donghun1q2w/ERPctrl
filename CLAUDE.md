@@ -21,7 +21,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with th
 
 두 스킬이 공유하는 런타임 모델(여러 파일을 읽어야 보이는 큰 그림):
 
-1. **부트스트랩**: `%APPDATA%\erpctrl\erpctrl.exe`가 없으면 공유서버(`Z:\그룹 공유\...\ErpCtrl`)에서 robocopy로 최초 1회 복사(약 82MB). robocopy는 **exit < 8 이 성공**.
+1. **부트스트랩**: `%APPDATA%\erpctrl\erpctrl.exe`가 없으면 공유서버에서 robocopy로 최초 1회 복사(약 82MB). robocopy는 **exit < 8 이 성공**. 공유서버 경로는 사용자마다 다르므로 `$env:ERPCTRL_SHARE_DIR` → `Z:\공유받은 폴더\...\ErpCtrl` → `Z:\그룹 공유\...\ErpCtrl` 순으로 확인해 **존재하는 첫 경로**를 쓴다. 경로를 새로 하드코딩하지 말고 이 후보 목록에 추가한다.
 2. **동기화**: 이미 있으면 `erpctrl update`로 `scenarios/`·`controls/`를 서버 기준 미러링. `scenarios/`는 update 시 **삭제 포함 미러**되므로 사용자 작성물은 반드시 `my_scenarios/`에 둔다.
 3. **README-first(필수)**: 매칭/작성 전에 항상 `%APPDATA%\erpctrl\README.md`를 Read로 읽는다. SKILL.md 요약표와 README가 다르면 **README가 우선**(서버 최신 반영). 이 단계를 생략하지 말 것.
 4. **매칭**: 각 시나리오 JSON의 한글 `description`을 자연어 요청과 의미 비교해 1건 선택. `blocks/`는 include 전용이라 매칭 후보에서 제외.
