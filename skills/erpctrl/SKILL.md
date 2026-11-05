@@ -19,12 +19,15 @@ argument-hint: "<자연어로 하고 싶은 작업> -- 가장 유사한 시나�
 
 | 이름 | 경로 |
 |---|---|
-| 배포 위치(주 경로) | `Z:\그룹 공유\R&D\연구개발부\Common\011. 편리한 프로그램\ErpCtrl` |
+| 배포 위치(1순위) | `Z:\공유받은 폴더\R&D(H0700)\연구개발부\Common\011. 편리한 프로그램\ErpCtrl` |
+| 배포 위치(2순위, 구 경로) | `Z:\그룹 공유\R&D\연구개발부\Common\011. 편리한 프로그램\ErpCtrl` |
+| 배포 위치 직접 지정 | 환경변수 `ERPCTRL_SHARE_DIR` (설정 시 위 두 경로보다 우선) |
 | 로컬 설치(실행 위치) | `%APPDATA%\erpctrl` |
 | 내장 시나리오 | `%APPDATA%\erpctrl\scenarios\*.json` |
 | 사용자 시나리오 | `%APPDATA%\erpctrl\my_scenarios\*.json` |
 
-공유서버 접근 불가 시(VPN/오프라인) **대체 경로 없이 즉시 중단**하고 원인을 안내한다.
+공유서버 경로는 사용자 계정마다 다르게 매핑된다. 위 후보를 차례로 확인해 **존재하는 첫 경로**를 쓴다.
+모두 접근 불가면(VPN/오프라인) **다른 대체 없이 즉시 중단**하고 원인을 안내한다.
 
 ---
 
@@ -37,13 +40,19 @@ argument-hint: "<자연어로 하고 싶은 작업> -- 가장 유사한 시나�
 
 ```powershell
 $ErrorActionPreference = 'Stop'
-$src = 'Z:\그룹 공유\R&D\연구개발부\Common\011. 편리한 프로그램\ErpCtrl'
+# 공유서버 경로는 사용자마다 다르다. 환경변수 우선, 없으면 후보를 차례로 확인한다.
+$srcCandidates = @(
+    $env:ERPCTRL_SHARE_DIR,
+    'Z:\공유받은 폴더\R&D(H0700)\연구개발부\Common\011. 편리한 프로그램\ErpCtrl',
+    'Z:\그룹 공유\R&D\연구개발부\Common\011. 편리한 프로그램\ErpCtrl'
+) | Where-Object { $_ }
+$src = $srcCandidates | Where-Object { Test-Path $_ } | Select-Object -First 1
 $dst = Join-Path $env:APPDATA 'erpctrl'
 $exe = Join-Path $dst 'erpctrl.exe'
 
 if (-not (Test-Path $exe)) {
-    if (-not (Test-Path $src)) {
-        Write-Error "공유서버 접근 불가: $src`n네트워크 드라이브(Z:) 매핑 또는 VPN 연결을 확인한 뒤 다시 시도하세요."
+    if (-not $src) {
+        Write-Error "공유서버 접근 불가. 확인한 경로:`n$($srcCandidates -join "`n")`n네트워크 드라이브(Z:) 매핑 또는 VPN 연결을 확인하거나, ERPCTRL_SHARE_DIR 환경변수에 실제 경로를 지정한 뒤 다시 시도하세요."
         exit 1
     }
     Write-Host "==> 최초 부트스트랩: 공유서버 → $dst (약 82MB, 수십 초 소요)"
@@ -60,7 +69,8 @@ if ($LASTEXITCODE -ne 0) {
 ```
 
 - robocopy 종료코드는 **8 미만이 성공**이다.
-- `$src`에 공백·한글이 있으므로 항상 따옴표로 감싼다.
+- `$src`에 공백·한글·괄호가 있으므로 항상 따옴표로 감싼다.
+- 경로가 위 후보에 없으면 `$env:ERPCTRL_SHARE_DIR`에 지정한다: `[System.Environment]::SetEnvironmentVariable("ERPCTRL_SHARE_DIR","<실제 경로>","User")`
 
 ### Step 1.5 — README 숙지 (필수)
 
@@ -69,13 +79,20 @@ if ($LASTEXITCODE -ne 0) {
 긴급정지·트러블슈팅·블록 카탈로그를 근거로 이후 단계를 수행한다.
 
 - 1순위: `%APPDATA%\erpctrl\README.md`
-- 폴백: `Z:\그룹 공유\R&D\연구개발부\Common\011. 편리한 프로그램\ErpCtrl\README.md`
-- 둘 다 없으면 사용자에게 보고하고 중단(부트스트랩 실패 가능성).
+- 폴백(공유서버, 사용자마다 경로가 다름 — 존재하는 첫 경로 사용):
+  - `$env:ERPCTRL_SHARE_DIR\README.md` (설정돼 있으면 최우선)
+  - `Z:\공유받은 폴더\R&D(H0700)\연구개발부\Common\011. 편리한 프로그램\ErpCtrl\README.md`
+  - `Z:\그룹 공유\R&D\연구개발부\Common\011. 편리한 프로그램\ErpCtrl\README.md`
+- 모두 없으면 사용자에게 보고하고 중단(부트스트랩 실패 가능성).
 
 ```powershell
 $readme = Join-Path $env:APPDATA 'erpctrl\README.md'
-if (-not (Test-Path $readme)) { $readme = 'Z:\그룹 공유\R&D\연구개발부\Common\011. 편리한 프로그램\ErpCtrl\README.md' }
-if (Test-Path $readme) { Write-Host "README 경로: $readme" } else { Write-Error "README.md 없음 — 부트스트랩 확인 필요" }
+if (-not (Test-Path $readme)) {
+    $readme = @($env:ERPCTRL_SHARE_DIR, 'Z:\공유받은 폴더\R&D(H0700)\연구개발부\Common\011. 편리한 프로그램\ErpCtrl', 'Z:\그룹 공유\R&D\연구개발부\Common\011. 편리한 프로그램\ErpCtrl') |
+        Where-Object { $_ } | ForEach-Object { Join-Path $_ 'README.md' } |
+        Where-Object { Test-Path $_ } | Select-Object -First 1
+}
+if ($readme -and (Test-Path $readme)) { Write-Host "README 경로: $readme" } else { Write-Error "README.md 없음 — 부트스트랩 확인 필요" }
 ```
 
 → 출력된 경로를 Read로 읽어 내용을 숙지한 뒤 Step 2로 진행한다. SKILL.md의 요약표와 README가
